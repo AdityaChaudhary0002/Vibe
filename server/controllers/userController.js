@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import fs from "fs";
 import Post from "../models/Post.js";
 import { inngest } from "../inngest/index.js";
+import sendEmail from "../configs/nodeMailer.js";
 
 // Get user data using userId
 export const getUserData = async (req, res) => {
@@ -207,6 +208,29 @@ export const sendConnectionReqest = async (req, res) => {
         to_user_id: id,
       });
 
+      // Send Email Notification
+      const sender = await User.findById(userId);
+      const receiver = await User.findById(id);
+
+      const subject = `New Connection Request`;
+      const body = `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2>Hi ${receiver.full_name},</h2>
+                    <p>You have a new connection request from ${sender.full_name} . @${sender.username}</p>
+                    <p>Click <a href="${process.env.FRONTEND_URL}/connections" style="color: #10b981;">here</a> to accept or reject the request</p>
+                    <br />
+                    <p>Thanks,<br />Vibe . Stay Connected</p>
+                  </div>`;
+
+      try {
+        await sendEmail({
+          to: receiver.email,
+          subject,
+          body,
+        });
+      } catch (emailError) {
+        console.error("Error sending connection request email:", emailError);
+      }
+
       await inngest.send({
         name: "app/conection-request",
         data: { connectionId: newConnection._id },
@@ -271,15 +295,17 @@ export const getUserConnections = async (req, res) => {
       "connections followers following"
     );
 
-    const connections = user.connections;
-    const followers = user.followers;
-    const following = user.following;
+    const connections = user.connections.filter((u) => u);
+    const followers = user.followers.filter((u) => u);
+    const following = user.following.filter((u) => u);
 
     const pendingConnections = (
       await Connection.find({ to_user_id: userId, status: "pending" }).populate(
         "from_user_id"
       )
-    ).map((connection) => connection.from_user_id);
+    )
+      .filter((c) => c.from_user_id)
+      .map((connection) => connection.from_user_id);
 
     res.json({
       success: true,
