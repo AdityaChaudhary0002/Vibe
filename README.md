@@ -1,6 +1,6 @@
-# 🚀 PingUp (Vibe) - Social Media Platform
+# 🚀 Vibe - Social Media Platform
 
-Welcome to **PingUp (Vibe)**! 🌟
+Welcome to  Vibe**! 🌟
 A modern, feature-rich social networking application built to connect people, share moments, and vibe together. Whether you're posting updates, sharing stories that vanish in 24 hours, or messaging friends, PingUp handles it all seamlessly.
 
 ---
