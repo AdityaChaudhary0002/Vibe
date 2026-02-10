@@ -12,7 +12,10 @@ const MenuItems = ({ setSidebarOpen }) => {
           end={to === "/"}
           onClick={() => setSidebarOpen(false)}
           className={({ isActive }) =>
-            `px-3.5 py-2 flex items-center gap-3 rounded-xl ${isActive ? "bg-indigo-50 text-indigo-700" : "hover:bg-gray-50"}`
+            `px-3.5 py-2 flex items-center gap-3 rounded-xl ${isActive
+              ? "bg-indigo-50 dark:bg-slate-800 text-indigo-700 dark:text-white"
+              : "hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-300"
+            }`
           }
         >
           <Icon className="size-5" />

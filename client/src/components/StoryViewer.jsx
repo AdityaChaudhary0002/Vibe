@@ -1,8 +1,12 @@
-import { BadgeCheck, X } from "lucide-react";
+import { BadgeCheck, Trash2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useAuth } from "@clerk/clerk-react";
+import api from "../api/axios.js";
+import toast from "react-hot-toast";
 
-const StoryViewer = ({ viewStory, setViewStory }) => {
+const StoryViewer = ({ viewStory, setViewStory, fetchStories }) => {
   const [progress, setProgress] = useState(0);
+  const { getToken, userId } = useAuth();
 
   useEffect(() => {
     let timer, progressInterval;
@@ -33,6 +37,27 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
 
   const handleClose = () => {
     setViewStory(null);
+  };
+
+  const handleDelete = async () => {
+    try {
+      const token = await getToken();
+      const { data } = await api.post(
+        "/api/story/delete",
+        { storyId: viewStory._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        setViewStory(null);
+        fetchStories();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   if (!viewStory) return null;
@@ -102,13 +127,23 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
         </div>
       </div>
 
-      {/* Close Button */}
-      <button
-        onClick={handleClose}
-        className=" absolute top-4 right-4 text-white text-3xl font-bold focus:outline-none"
-      >
-        <X className="size-8 hover:scale-110 transition cursor-pointer" />
-      </button>
+      <div className=" absolute top-4 right-4 flex gap-4">
+        {/* Delete Button (Only for owner) */}
+        <button
+          onClick={handleDelete}
+          className="text-white text-3xl font-bold focus:outline-none bg-red-500/80 p-2 rounded-full hover:bg-red-600 transition cursor-pointer"
+        >
+          <Trash2 className="size-5" />
+        </button>
+
+        {/* Close Button */}
+        <button
+          onClick={handleClose}
+          className="text-white text-3xl font-bold focus:outline-none"
+        >
+          <X className="size-8 hover:scale-110 transition cursor-pointer" />
+        </button>
+      </div>
 
       {/* Content Wrapper */}
       <div className="max-w-[90vw] max-h-[90vh] flex items-center justify-center">

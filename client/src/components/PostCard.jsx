@@ -13,6 +13,9 @@ const PostCard = ({ post }) => {
     '<span class="text-indigo-600">$1</span>'
   );
   const [likes, setLikes] = useState(post.likes_count);
+  const [comments, setComments] = useState(post.comments || []);
+  const [commentText, setCommentText] = useState("");
+  const [showComments, setShowComments] = useState(false);
   const currentUser = useSelector((state) => state.user.value);
 
   const navigate = useNavigate();
@@ -46,8 +49,39 @@ const PostCard = ({ post }) => {
     }
   };
 
+  const handleAddComment = async () => {
+    if (!commentText.trim()) return;
+    try {
+      const token = await getToken();
+      const { data } = await api.post(
+        "/api/post/comment",
+        { postId: post._id, text: commentText },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        setComments([
+          ...comments,
+          {
+            user: currentUser,
+            text: commentText,
+            createdAt: new Date(),
+          },
+        ]);
+        setCommentText("");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   return (
-    <div className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
+    <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-gray-700 rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
       {/* User Info */}
       <div
         onClick={() => navigate(`/profile/${post.user._id}`)}
@@ -60,7 +94,7 @@ const PostCard = ({ post }) => {
         />
         <div>
           <div className="flex items-center space-x-1">
-            <span>{post.user.full_name}</span>
+            <span className="dark:text-white">{post.user.full_name}</span>
             <BadgeCheck className="size-4 text-blue-500" />
           </div>
           <div className="text-gray-500 text-sm">
@@ -72,7 +106,7 @@ const PostCard = ({ post }) => {
       {/* Content */}
       {post.content && (
         <div
-          className="text-gray-800 text-sm whitespace-pre-line"
+          className="text-gray-800 dark:text-gray-100 text-sm whitespace-pre-line"
           dangerouslySetInnerHTML={{ __html: postWithHashtags }}
         />
       )}
@@ -90,7 +124,7 @@ const PostCard = ({ post }) => {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-4 text-gray-600 text-sm pt-2 border-t border-gray-300">
+      <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400 text-sm pt-2 border-t border-gray-300 dark:border-gray-700">
         <div className="flex items-center gap-1">
           <Heart
             className={`size-4 cursor-pointer ${likes.includes(currentUser._id) && "text-red-500 fill-red-500"}`}
@@ -98,15 +132,62 @@ const PostCard = ({ post }) => {
           />
           <span>{likes.length}</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div
+          className="flex items-center gap-1 cursor-pointer"
+          onClick={() => setShowComments(!showComments)}
+        >
           <MessageCircle className="size-4" />
-          <span>{12}</span>
+          <span>{comments.length}</span>
         </div>
         <div className="flex items-center gap-1">
           <Share2 className="size-4" />
           <span>{12}</span>
         </div>
       </div>
+
+      {/* Comments Section */}
+      {showComments && (
+        <div className="pt-2">
+          {/* Comment Input */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Write a comment..."
+              className="flex-1 border border-gray-300 dark:border-gray-700 bg-transparent dark:text-white rounded-full px-4 py-2 text-sm focus:outline-none focus:border-indigo-500"
+            />
+            <button
+              onClick={handleAddComment}
+              className="text-indigo-600 font-semibold text-sm disabled:opacity-50"
+              disabled={!commentText.trim()}
+            >
+              Post
+            </button>
+          </div>
+
+          {/* Comments List */}
+          <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+            {comments.map((comment, index) => (
+              <div key={index} className="flex gap-2">
+                <img
+                  src={comment.user.profile_picture}
+                  alt=""
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 px-3 flex-1">
+                  <p className="font-semibold text-xs dark:text-white">
+                    {comment.user.full_name}
+                  </p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    {comment.text}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@ import fs from "fs";
 import imagekit from "../configs/imageKit.js";
 import Post from "../models/Post.js";
 import User from "../models/User.js";
+import Notification from "../models/Notification.js";
 
 export const addPost = async (req, res) => {
   try {
@@ -60,6 +61,7 @@ export const getFeedPosts = async (req, res) => {
     const posts = (
       await Post.find({ user: { $in: userIds } })
         .populate("user")
+        .populate("comments.user")
         .sort({ createdAt: -1 })
     ).filter((post) => post.user);
 
@@ -85,8 +87,52 @@ export const likePost = async (req, res) => {
     } else {
       post.likes_count.push(userId);
       await post.save();
+
+      // Create Notification
+      if (post.user.toString() !== userId) {
+        await Notification.create({
+          recipient: post.user,
+          sender: userId,
+          type: "like",
+          post: postId,
+        });
+      }
+
       res.json({ success: true, message: "Post liked" });
     }
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Add Comment
+export const addComment = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { postId, text } = req.body;
+
+    const post = await Post.findById(postId);
+
+    if (!post) {
+      return res.json({ success: false, message: "Post not found" });
+    }
+
+    post.comments.push({ user: userId, text });
+    await post.save();
+
+    // Create Notification
+    if (post.user.toString() !== userId) {
+      await Notification.create({
+        recipient: post.user,
+        sender: userId,
+        type: "comment",
+        post: postId,
+        text,
+      });
+    }
+
+    res.json({ success: true, message: "Comment added" });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });

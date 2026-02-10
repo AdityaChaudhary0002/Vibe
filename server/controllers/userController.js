@@ -1,4 +1,5 @@
 import imagekit from "../configs/imageKit.js";
+import Notification from "../models/Notification.js";
 import Connection from "../models/Connection.js";
 import User from "../models/User.js";
 import fs from "fs";
@@ -143,6 +144,13 @@ export const followUser = async (req, res) => {
     toUser.followers.push(userId);
     await toUser.save();
 
+    // Create Notification
+    await Notification.create({
+      recipient: id,
+      sender: userId,
+      type: "follow",
+    });
+
     res.json({ success: true, message: "Now you are following this user" });
   } catch (error) {
     console.log(error);
@@ -234,6 +242,13 @@ export const sendConnectionReqest = async (req, res) => {
       await inngest.send({
         name: "app/conection-request",
         data: { connectionId: newConnection._id },
+      });
+
+      // Create Notification
+      await Notification.create({
+        recipient: id,
+        sender: userId,
+        type: "connection_request",
       });
 
       return res.json({
@@ -330,6 +345,25 @@ export const getUserProfiles = async (req, res) => {
     }
     const posts = await Post.find({ user: profileId }).populate("user");
     res.json({ success: true, profile, posts });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Get Notifications
+export const getNotifications = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+
+    const notifications = await Notification.find({ recipient: userId })
+      .populate("sender", "full_name profile_picture")
+      .populate("post", "image_urls")
+      .sort({ createdAt: -1 });
+
+    await Notification.updateMany({ recipient: userId, read: false }, { read: true });
+
+    res.json({ success: true, notifications });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });

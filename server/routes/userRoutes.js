@@ -10,6 +10,7 @@ import {
   sendConnectionReqest,
   unfollowUser,
   updateUserData,
+  getNotifications,
 } from "../controllers/userController.js";
 import { upload } from "../configs/multer.js";
 import { getUserRecentMessages } from "../controllers/messageController.js";
@@ -34,5 +35,6 @@ userRouter.post("/accept", protect, acceptConnectionRequest);
 userRouter.get("/connections", protect, getUserConnections);
 userRouter.post("/profiles", getUserProfiles);
 userRouter.get("/recent-messages", protect, getUserRecentMessages);
+userRouter.get("/notifications", protect, getNotifications);
 
 export default userRouter;

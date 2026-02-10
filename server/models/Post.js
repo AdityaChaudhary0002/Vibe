@@ -11,6 +11,13 @@ const postSchema = new mongoose.Schema(
       required: true,
     },
     likes_count: [{ type: String, ref: "User" }],
+    comments: [
+      {
+        user: { type: String, ref: "User", required: true },
+        text: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true, minimize: false }
 );

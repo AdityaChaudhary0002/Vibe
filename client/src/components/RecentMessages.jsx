@@ -54,14 +54,16 @@ const RecentMessages = () => {
   }, [user]);
 
   return (
-    <div className="bg-white max-w-xs mt-4 p-4 min-h-20 rounded-md shadow text-xs text-slate-800">
-      <h3 className="font-semibold text-slate-800 mb-4">Recent Messages</h3>
+    <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-gray-700 max-w-xs mt-4 p-4 min-h-20 rounded-md shadow text-xs text-slate-800 dark:text-gray-100">
+      <h3 className="font-semibold text-slate-800 dark:text-gray-100 mb-4">
+        Recent Messages
+      </h3>
       <div className="flex flex-col max-h-56 overflow-y-scroll no-scrollbar">
         {messages.map((message, index) => (
           <Link
             to={`/messages/${message.from_user_id._id}`}
             key={index}
-            className="flex items-start rounded-md gap-2 py-2 hover:bg-slate-100 p-2"
+            className="flex items-start rounded-md gap-2 py-2 hover:bg-slate-100 dark:hover:bg-gray-800 p-2"
           >
             <img
               src={message.from_user_id.profile_picture}
