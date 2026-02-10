@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import Loading from "../components/Loading";
@@ -9,6 +10,7 @@ import { useAuth } from "@clerk/clerk-react";
 import api from "../api/axios.js";
 import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
+import UserListModal from "../components/UserListModal";
 
 const Profile = () => {
   const currentUser = useSelector((state) => state.user.value);
@@ -19,6 +21,11 @@ const Profile = () => {
   const [posts, setPosts] = useState([]);
   const [activeTab, setActiveTab] = useState("posts");
   const [showEdit, setShowEdit] = useState(false);
+
+  // Vibe & List Modal States
+  const [vibeResult, setVibeResult] = useState(null);
+  const [vibeLoading, setVibeLoading] = useState(false);
+  const [userListModal, setUserListModal] = useState({ isOpen: false, title: "", users: [] });
 
   const fetchUser = async (profileId) => {
     const token = await getToken();
@@ -49,8 +56,40 @@ const Profile = () => {
     }
   }, [profileId, currentUser]);
 
+  const isOwnProfile = !profileId || profileId === currentUser._id;
+
+  const checkVibe = async () => {
+    if (vibeLoading) return;
+    setVibeLoading(true);
+    const token = await getToken();
+    try {
+      const { data } = await api.post(
+        "/api/user/vibe-match",
+        { profileId: user._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        setVibeResult(data);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error("Failed to check vibe");
+    }
+    setVibeLoading(false);
+  };
+
+  const openFollowers = () => {
+    setUserListModal({ isOpen: true, title: "Followers", users: user.followers });
+  };
+
+  const openFollowing = () => {
+    setUserListModal({ isOpen: true, title: "Following", users: user.following });
+  };
+
+
   return user ? (
-    <div className=" relative h-full overflow-y-scroll bg-gray-50 dark:bg-slate-950 p-6">
+    <div className="relative min-h-screen bg-gray-50 dark:bg-slate-950 p-6 pb-24">
       <div className="max-w-3xl mx-auto">
         {/* Profile Card */}
         <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-gray-700 rounded-2xl shadow overflow-hidden">
@@ -68,10 +107,44 @@ const Profile = () => {
           <UserProfileInfo
             user={user}
             posts={posts}
-            profileId={profileId}
+            isOwnProfile={isOwnProfile}
             setShowEdit={setShowEdit}
+            checkVibe={checkVibe}
+            vibeLoading={vibeLoading}
+            onFollowersClick={openFollowers}
+            onFollowingClick={openFollowing}
           />
         </div>
+
+        {/* User List Modal */}
+        {userListModal.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setUserListModal({ ...userListModal, isOpen: false })}>
+            <UserListModal
+              title={userListModal.title}
+              users={userListModal.users}
+              onClose={() => setUserListModal({ ...userListModal, isOpen: false })}
+            />
+          </div>
+        )}
+
+        {/* Vibe Check Modal */}
+        {vibeResult && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setVibeResult(null)}>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center transform transition-all scale-100" onClick={(e) => e.stopPropagation()}>
+              <div className="size-20 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-full mx-auto flex items-center justify-center mb-4 shadow-lg shadow-purple-500/30">
+                <span className="text-3xl font-bold text-white">{vibeResult.score}%</span>
+              </div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent mb-2">Vibe Match!</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6 italic">"{vibeResult.reason}"</p>
+              <button
+                onClick={() => setVibeResult(null)}
+                className="w-full py-3 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-white font-medium hover:bg-gray-200 dark:hover:bg-slate-700 transition"
+              >
+                Awesome! 🚀
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="mt-6">
@@ -81,8 +154,8 @@ const Profile = () => {
                 onClick={() => setActiveTab(tab)}
                 key={tab}
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${activeTab === tab
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  ? "bg-indigo-600 text-white"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -105,7 +178,7 @@ const Profile = () => {
               {posts
                 .filter((post) => post.image_urls.length > 0)
                 .map((post) => (
-                  <>
+                  <React.Fragment key={post._id}>
                     {post.image_urls.map((image, index) => (
                       <Link
                         target="_blank"
@@ -124,7 +197,7 @@ const Profile = () => {
                         </p>
                       </Link>
                     ))}
-                  </>
+                  </React.Fragment>
                 ))}
             </div>
           )}

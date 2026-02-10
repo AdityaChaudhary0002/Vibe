@@ -2,7 +2,7 @@ import { Calendar, MapPin, PenBox, Verified } from "lucide-react";
 import moment from "moment";
 import React from "react";
 
-const UserProfileInfo = ({ user, posts, profileId, setShowEdit }) => {
+const UserProfileInfo = ({ user, posts, isOwnProfile, setShowEdit, checkVibe, vibeLoading, onFollowersClick, onFollowingClick }) => {
   return (
     <div className=" relative py-4 px-6 md:px-8 bg-white dark:bg-slate-900">
       <div className="flex flex-col md:flex-row items-start gap-6">
@@ -28,16 +28,32 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }) => {
               </p>
             </div>
 
-            {/* If user is not others profile that means he is opening his profile so we will give edit button */}
-            {!profileId && (
-              <button
-                onClick={() => setShowEdit(true)}
-                className="flex items-center gap-2 border cursor-pointer border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 dark:text-white px-4 py-2 font-medium transition-colors mt-4 md:mt-0 rounded-lg"
-              >
-                <PenBox className="size-4" />
-                Edit
-              </button>
-            )}
+            {/* Actions */}
+            <div className="flex items-center gap-3 mt-4 md:mt-0">
+              {isOwnProfile ? (
+                <button
+                  onClick={() => setShowEdit(true)}
+                  className="flex items-center gap-2 border cursor-pointer border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-800 dark:text-white px-4 py-2 font-medium transition-colors rounded-lg"
+                >
+                  <PenBox className="size-4" />
+                  Edit
+                </button>
+              ) : (
+                <button
+                  onClick={checkVibe}
+                  disabled={vibeLoading}
+                  className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-2 font-medium transition-all rounded-lg shadow-lg hover:shadow-indigo-500/25 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {vibeLoading ? (
+                    <span className="animate-spin text-xl">⚡</span>
+                  ) : (
+                    <>
+                      <span className="text-xl">⚡</span> Check Vibe
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
           <p className="text-gray-700 dark:text-gray-300 text-sm max-w-md mt-4">
             {user.bio}
@@ -66,7 +82,7 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }) => {
                 Posts
               </span>
             </div>
-            <div>
+            <div className="cursor-pointer hover:opacity-80 transition" onClick={onFollowersClick}>
               <span className="sm:text-xl font-bold text-gray-900 dark:text-white">
                 {user.followers.length}
               </span>
@@ -74,7 +90,7 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }) => {
                 Followers
               </span>
             </div>
-            <div>
+            <div className="cursor-pointer hover:opacity-80 transition" onClick={onFollowingClick}>
               <span className="sm:text-xl font-bold text-gray-900 dark:text-white">
                 {user.following.length}
               </span>

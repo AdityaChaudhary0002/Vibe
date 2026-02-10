@@ -18,9 +18,10 @@ import { fetchUser } from "./features/user/userSlice.js";
 import { fetchConnections } from "./features/connections/connectionSlice.js";
 import { addMessage } from "./features/messages/messagesSlice.js";
 import Notification from "./components/Notification.jsx";
+import Loading from "./components/Loading";
 
 const App = () => {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
   const dispatch = useDispatch();
   const { pathname } = useLocation();
@@ -71,7 +72,7 @@ const App = () => {
     <>
       <Toaster />
       <Routes>
-        <Route path="/" element={!user ? <Login /> : <Layout />}>
+        <Route path="/" element={!isLoaded ? <div className="h-screen w-full flex justify-center items-center"><Loading /></div> : (!user ? <Login /> : <Layout />)}>
           <Route index element={<Feed />} />
           <Route path="messages" element={<Message />} />
           <Route path="messages/:userId" element={<ChatBox />} />

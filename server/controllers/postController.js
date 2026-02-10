@@ -214,3 +214,26 @@ export const getTrendingHashtags = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// Share Post
+export const sharePost = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { postId } = req.body;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.json({ success: false, message: "Post not found" });
+    }
+
+    if (!post.shares.includes(userId)) {
+      post.shares.push(userId);
+      await post.save();
+    }
+
+    res.json({ success: true, message: "Post shared", sharesCount: post.shares.length });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};

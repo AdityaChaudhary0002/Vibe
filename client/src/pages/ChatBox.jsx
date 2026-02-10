@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { ImageIcon, SendHorizonal } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
@@ -62,8 +63,14 @@ const ChatBox = () => {
   useEffect(() => {
     fetchUserMessages();
 
+    // Polling: Fetch messages every 3 seconds
+    const interval = setInterval(() => {
+      fetchUserMessages();
+    }, 3000);
+
     return () => {
       dispatch(resetMessages());
+      clearInterval(interval);
     };
   }, [userId]);
 

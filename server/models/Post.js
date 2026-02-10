@@ -1,3 +1,4 @@
+
 import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
@@ -11,6 +12,7 @@ const postSchema = new mongoose.Schema(
       required: true,
     },
     likes_count: [{ type: String, ref: "User" }],
+    shares: [{ type: String, ref: "User" }],
     comments: [
       {
         user: { type: String, ref: "User", required: true },

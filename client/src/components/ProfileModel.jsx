@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateUser } from "../features/user/userSlice.js";
 import { useAuth } from "@clerk/clerk-react";
@@ -47,33 +48,58 @@ const ProfileModel = ({ setShowEdit }) => {
       toast.error(error.message);
     }
   };
+
   return (
-    <div className="fixed top-0 bottom-0 left-0 right-0 z-110 h-screen overflow-y-scroll bg-black/50">
-      <div className="max-w-2xl sm:py-6 mx-auto">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50 dark:bg-slate-900/50">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
             Edit Profile
           </h1>
-
-          <form
-            className="space-y-4"
-            onSubmit={(e) =>
-              toast.promise(handleSaveProfile(e), { loading: "Saving..." })
-            }
+          <button
+            onClick={() => setShowEdit(false)}
+            className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-slate-800 text-gray-500 dark:text-gray-400 transition"
           >
+            <X size={20} />
+          </button>
+        </div>
+
+        <form
+          className="p-6 space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar"
+          onSubmit={(e) =>
+            toast.promise(handleSaveProfile(e), { loading: "Saving..." })
+          }
+        >
+          {/* Images Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Profile Picture */}
-            <div className="flex flex-col items-start gap-3">
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Profile Picture
+              </span>
               <label
                 htmlFor="profile_picture"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="relative cursor-pointer group w-24 h-24"
               >
-                Profile Picture
+                <img
+                  src={
+                    editForm.profile_picture
+                      ? URL.createObjectURL(editForm.profile_picture)
+                      : user.profile_picture
+                  }
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full object-cover ring-2 ring-gray-100 dark:ring-slate-700 group-hover:opacity-75 transition"
+                />
+                <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                  <Pencil className="size-5 text-white" />
+                </div>
                 <input
                   hidden
                   type="file"
                   accept="image/*"
                   id="profile_picture"
-                  className="w-full p-3 border border-gray-200 rounded-lg"
                   onChange={(e) =>
                     setEditForm({
                       ...editForm,
@@ -81,67 +107,56 @@ const ProfileModel = ({ setShowEdit }) => {
                     })
                   }
                 />
-                <div className="group/profile relative">
-                  <img
-                    src={
-                      editForm.profile_picture
-                        ? URL.createObjectURL(editForm.profile_picture)
-                        : user.profile_picture
-                    }
-                    alt=""
-                    className="w-24 h-24 rounded-full object-cover mt-2"
-                  />
-
-                  <div className=" absolute hidden group-hover/profile:flex top-0 left-0 right-0 bottom-0 bg-black/20 rounded-full items-center justify-center">
-                    <Pencil className="size-5 text-white" />
-                  </div>
-                </div>
               </label>
             </div>
 
             {/* Cover Photo */}
-            <div className="flex flex-col items-start gap-3">
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Cover Photo
+              </span>
               <label
                 htmlFor="cover_photo"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="relative cursor-pointer group w-full h-24"
               >
-                Cover Photo
-                <input
-                  hidden
-                  type="file"
-                  accept="image/*"
-                  id="cover_photo"
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, cover_photo: e.target.files[0] })
-                  }
-                />
-                <div className="group/cover relative">
+                <div className="w-full h-24 rounded-lg overflow-hidden ring-1 ring-gray-100 dark:ring-slate-700 bg-gray-100 dark:bg-slate-800">
                   <img
                     src={
                       editForm.cover_photo
                         ? URL.createObjectURL(editForm.cover_photo)
                         : user.cover_photo
                     }
-                    className="w-80 h-40 rounded-lg bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 object-cover mt-2"
-                    alt=""
+                    className="w-full h-full object-cover group-hover:opacity-75 transition"
+                    alt="Cover"
                   />
-
-                  <div className=" absolute hidden group-hover/cover:flex top-0 left-0 right-0 bottom-0 bg-black/20 rounded-lg items-center justify-center">
-                    <Pencil className="size-5 text-white" />
-                  </div>
                 </div>
+
+                <div className="absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                  <Pencil className="size-5 text-white" />
+                </div>
+
+                <input
+                  hidden
+                  type="file"
+                  accept="image/*"
+                  id="cover_photo"
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, cover_photo: e.target.files[0] })
+                  }
+                />
               </label>
             </div>
+          </div>
 
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Full Name
               </label>
               <input
                 type="text"
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="Please enter your full name"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition outline-none"
+                placeholder="Your full name"
                 onChange={(e) =>
                   setEditForm({ ...editForm, full_name: e.target.value })
                 }
@@ -150,13 +165,13 @@ const ProfileModel = ({ setShowEdit }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Username
               </label>
               <input
                 type="text"
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="Please enter your username"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition outline-none"
+                placeholder="username"
                 onChange={(e) =>
                   setEditForm({ ...editForm, username: e.target.value })
                 }
@@ -165,13 +180,13 @@ const ProfileModel = ({ setShowEdit }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Bio
               </label>
               <textarea
                 rows={3}
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="Please enter short bio"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition outline-none resize-none"
+                placeholder="Tell us about yourself..."
                 onChange={(e) =>
                   setEditForm({ ...editForm, bio: e.target.value })
                 }
@@ -180,37 +195,37 @@ const ProfileModel = ({ setShowEdit }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Location
               </label>
               <input
                 type="text"
-                className="w-full p-3 border border-gray-200 rounded-lg"
-                placeholder="Please enter your location"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition outline-none"
+                placeholder="City, Country"
                 onChange={(e) =>
                   setEditForm({ ...editForm, location: e.target.value })
                 }
                 value={editForm.location}
               />
             </div>
+          </div>
 
-            <div className="flex justify-end space-x-3 pt-6">
-              <button
-                type="button"
-                onClick={() => setShowEdit(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition cursor-pointer"
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => setShowEdit(false)}
+              className="px-5 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition font-medium shadow-lg shadow-indigo-500/25"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

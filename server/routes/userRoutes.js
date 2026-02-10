@@ -11,6 +11,7 @@ import {
   unfollowUser,
   updateUserData,
   getNotifications,
+  checkVibeMatch,
 } from "../controllers/userController.js";
 import { upload } from "../configs/multer.js";
 import { getUserRecentMessages } from "../controllers/messageController.js";
@@ -36,5 +37,6 @@ userRouter.get("/connections", protect, getUserConnections);
 userRouter.post("/profiles", getUserProfiles);
 userRouter.get("/recent-messages", protect, getUserRecentMessages);
 userRouter.get("/notifications", protect, getNotifications);
+userRouter.post("/vibe-match", protect, checkVibeMatch);
 
 export default userRouter;

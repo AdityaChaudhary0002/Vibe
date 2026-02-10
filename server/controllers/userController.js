@@ -6,6 +6,7 @@ import fs from "fs";
 import Post from "../models/Post.js";
 import { inngest } from "../inngest/index.js";
 import sendEmail from "../configs/nodeMailer.js";
+import groq from "../configs/groq.js";
 
 // Get user data using userId
 export const getUserData = async (req, res) => {
@@ -72,7 +73,7 @@ export const updateUserData = async (req, res) => {
       const buffer = fs.readFileSync(cover.path);
       const response = await imagekit.upload({
         file: buffer,
-        fileName: profile.originalname,
+        fileName: cover.originalname,
       });
 
       const url = imagekit.url({
@@ -339,7 +340,9 @@ export const getUserConnections = async (req, res) => {
 export const getUserProfiles = async (req, res) => {
   try {
     const { profileId } = req.body;
-    const profile = await User.findById(profileId);
+    const profile = await User.findById(profileId)
+      .populate("followers", "full_name username profile_picture")
+      .populate("following", "full_name username profile_picture");
     if (!profile) {
       return res.json({ success: false, message: "Profile not found" });
     }
@@ -367,5 +370,49 @@ export const getNotifications = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
+  }
+};
+
+// Check Vibe Match (AI)
+export const checkVibeMatch = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { profileId } = req.body;
+
+    const user1 = await User.findById(userId);
+    const user2 = await User.findById(profileId);
+
+    if (!user1 || !user2) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    // Fetch last 3 posts for context
+    const posts1 = await Post.find({ user: userId }).limit(3).select("content");
+    const posts2 = await Post.find({ user: profileId }).limit(3).select("content");
+
+    const content1 = posts1.map((p) => p.content).join(" ");
+    const content2 = posts2.map((p) => p.content).join(" ");
+
+    const prompt = `
+      Analyze the "vibe" compatibility between two users based on their profiles.
+      
+      User 1: ${user1.full_name}, Bio: ${user1.bio}, Posts: ${content1}
+      User 2: ${user2.full_name}, Bio: ${user2.bio}, Posts: ${content2}
+      
+      Return a JSON object ONLY: { "score": number (0-100), "reason": "short funny 1-sentence reason" }.
+    `;
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama-3.3-70b-versatile",
+      response_format: { type: "json_object" },
+    });
+
+    const result = JSON.parse(chatCompletion.choices[0]?.message?.content || "{}");
+
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.log("Vibe Match Error:", error);
+    res.json({ success: false, message: "AI Vibe Check Failed" });
   }
 };

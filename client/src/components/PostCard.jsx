@@ -1,3 +1,4 @@
+
 import { BadgeCheck, Heart, MessageCircle, Share2 } from "lucide-react";
 import React, { useState } from "react";
 import moment from "moment";
@@ -14,12 +15,38 @@ const PostCard = ({ post }) => {
   );
   const [likes, setLikes] = useState(post.likes_count);
   const [comments, setComments] = useState(post.comments || []);
+  const [shares, setShares] = useState(post.shares || []);
   const [commentText, setCommentText] = useState("");
   const [showComments, setShowComments] = useState(false);
   const currentUser = useSelector((state) => state.user.value);
 
   const navigate = useNavigate();
   const { getToken } = useAuth();
+
+  const handleShare = async () => {
+    try {
+      const token = await getToken();
+      // Copy link to clipboard (simulated share)
+      const postLink = `${window.location.origin}/post/${post._id}`;
+      navigator.clipboard.writeText(postLink);
+      toast.success("Link copied! Share it now 🚀");
+
+      // Call API to increment share count
+      const { data } = await api.post(
+        "/api/post/share",
+        { postId: post._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (data.success) {
+        if (!shares.includes(currentUser._id)) {
+          setShares([...shares, currentUser._id]);
+        }
+      }
+    } catch (error) {
+      toast.error("Failed to share");
+    }
+  };
 
   const handleLike = async () => {
     try {
@@ -125,23 +152,22 @@ const PostCard = ({ post }) => {
 
       {/* Actions */}
       <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400 text-sm pt-2 border-t border-gray-300 dark:border-gray-700">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 cursor-pointer hover:text-red-500 transition" onClick={handleLike}>
           <Heart
-            className={`size-4 cursor-pointer ${likes.includes(currentUser._id) && "text-red-500 fill-red-500"}`}
-            onClick={handleLike}
+            className={`size-5 ${likes.includes(currentUser._id) && "text-red-500 fill-red-500"}`}
           />
           <span>{likes.length}</span>
         </div>
         <div
-          className="flex items-center gap-1 cursor-pointer"
+          className="flex items-center gap-1 cursor-pointer hover:text-blue-500 transition"
           onClick={() => setShowComments(!showComments)}
         >
-          <MessageCircle className="size-4" />
+          <MessageCircle className="size-5" />
           <span>{comments.length}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <Share2 className="size-4" />
-          <span>{12}</span>
+        <div className="flex items-center gap-1 cursor-pointer hover:text-green-500 transition" onClick={handleShare}>
+          <Share2 className="size-5" />
+          <span>{shares.length}</span>
         </div>
       </div>
 
