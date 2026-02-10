@@ -138,3 +138,79 @@ export const addComment = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// Generate AI Caption
+import groq from "../configs/groq.js";
+
+export const generatePostCaption = async (req, res) => {
+  try {
+    const { prompt } = req.body;
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: `Write a creative and engaging social media post caption for: ${prompt}. Include trending hashtags.`,
+        },
+      ],
+      model: "llama-3.3-70b-versatile",
+    });
+
+    const text = chatCompletion.choices[0]?.message?.content || "";
+
+    res.json({ success: true, caption: text });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Get Trending Hashtags
+export const getTrendingHashtags = async (req, res) => {
+  try {
+    const posts = await Post.find().sort({ createdAt: -1 }).limit(100);
+    const hashtags = {};
+
+    posts.forEach((post) => {
+      const tags = post.content.match(/#[\w]+/g);
+      if (tags) {
+        tags.forEach((tag) => {
+          hashtags[tag] = (hashtags[tag] || 0) + 1;
+        });
+      }
+    });
+
+    const sortedHashtags = Object.entries(hashtags)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([tag, count]) => ({ tag, count }));
+
+    if (sortedHashtags.length === 0) {
+      return res.json({ success: true, trends: [] });
+    }
+
+    // AI Summary for the top trend
+    const topTrend = sortedHashtags[0].tag;
+    let summary = "";
+
+    try {
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: "user",
+            content: `Why is ${topTrend} trending? Give a very short (10 words) creative reason.`,
+          },
+        ],
+        model: "llama-3.3-70b-versatile",
+      });
+      summary = chatCompletion.choices[0]?.message?.content || "";
+    } catch (aiError) {
+      console.log("AI Summary Error:", aiError);
+      summary = "Trending now!";
+    }
+
+    res.json({ success: true, trends: sortedHashtags, summary });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
