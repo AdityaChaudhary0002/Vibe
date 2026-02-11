@@ -51,19 +51,28 @@ export const addPost = async (req, res) => {
 };
 
 // Get Posts
+// Get Posts
 export const getFeedPosts = async (req, res) => {
   try {
     const { userId } = req.auth();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5; // Default limit 5 for testing/demo
+    const skip = (page - 1) * limit;
+
     const user = await User.findById(userId);
 
-    // User connections and followers
+    // User connections and followers (and self)
     const userIds = [userId, ...user.connections, ...user.following];
-    const posts = (
-      await Post.find({ user: { $in: userIds } })
-        .populate("user")
-        .populate("comments.user")
-        .sort({ createdAt: -1 })
-    ).filter((post) => post.user);
+
+    // Fetch total count for hasMore check (optional but good)
+    // For simplicity, we just return the chunk. Frontend stops when chunk < limit.
+
+    const posts = await Post.find({ user: { $in: userIds } })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("user")
+      .populate("comments.user");
 
     res.json({ success: true, posts });
   } catch (error) {

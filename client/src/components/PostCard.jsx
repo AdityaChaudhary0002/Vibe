@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 const PostCard = ({ post }) => {
   const postWithHashtags = post.content.replace(
     /(#\w+)/g,
-    '<span class="text-indigo-600">$1</span>'
+    '<span class="text-blue-600 dark:text-blue-400 font-medium">$1</span>'
   );
   const [likes, setLikes] = useState(post.likes_count);
   const [comments, setComments] = useState(post.comments || []);
@@ -108,7 +108,7 @@ const PostCard = ({ post }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-gray-700 rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
+    <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-gray-700 rounded-xl shadow p-4 space-y-4 w-full max-w-2xl animate-fadeInUp">
       {/* User Info */}
       <div
         onClick={() => navigate(`/profile/${post.user._id}`)}
@@ -152,7 +152,7 @@ const PostCard = ({ post }) => {
 
       {/* Actions */}
       <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400 text-sm pt-2 border-t border-gray-300 dark:border-gray-700">
-        <div className="flex items-center gap-1 cursor-pointer hover:text-red-500 transition" onClick={handleLike}>
+        <div className="flex items-center gap-1 cursor-pointer hover:text-red-500 transition-transform active:scale-110 duration-200" onClick={handleLike}>
           <Heart
             className={`size-5 ${likes.includes(currentUser._id) && "text-red-500 fill-red-500"}`}
           />

@@ -60,16 +60,16 @@ const TrendingBar = () => {
         <div className="max-w-xs w-full bg-white dark:bg-slate-900 border border-transparent dark:border-gray-700 p-4 rounded-xl shadow-sm flex flex-col gap-4">
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-100 dark:border-gray-700">
+            <div className="flex border-b border-gray-100 dark:border-gray-800">
                 <button
                     onClick={() => setActiveTab("hashtags")}
-                    className={`flex-1 pb-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'hashtags' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                    className={`flex-1 pb-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'hashtags' ? 'text-indigo-600 dark:text-white border-b-2 border-indigo-600 dark:border-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
                 >
                     <TrendingUp className="size-4" /> Trending
                 </button>
                 <button
                     onClick={() => setActiveTab("news")}
-                    className={`flex-1 pb-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'news' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                    className={`flex-1 pb-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${activeTab === 'news' ? 'text-indigo-600 dark:text-white border-b-2 border-indigo-600 dark:border-white' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}
                 >
                     <Newspaper className="size-4" /> Vibe News
                 </button>
@@ -130,8 +130,8 @@ const TrendingBar = () => {
                                     key={cat.id}
                                     onClick={() => setNewsCategory(cat.id)}
                                     className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors whitespace-nowrap ${newsCategory === cat.id
-                                            ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
-                                            : "bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"
+                                        ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300"
+                                        : "bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700"
                                         }`}
                                 >
                                     {cat.label}

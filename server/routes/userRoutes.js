@@ -12,6 +12,7 @@ import {
   updateUserData,
   getNotifications,
   checkVibeMatch,
+  getUnreadNotificationCount,
 } from "../controllers/userController.js";
 import { upload } from "../configs/multer.js";
 import { getUserRecentMessages } from "../controllers/messageController.js";
@@ -38,5 +39,6 @@ userRouter.post("/profiles", getUserProfiles);
 userRouter.get("/recent-messages", protect, getUserRecentMessages);
 userRouter.get("/notifications", protect, getNotifications);
 userRouter.post("/vibe-match", protect, checkVibeMatch);
+userRouter.post("/unread-notifications", protect, getUnreadNotificationCount);
 
 export default userRouter;

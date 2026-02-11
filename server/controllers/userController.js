@@ -416,3 +416,15 @@ export const checkVibeMatch = async (req, res) => {
     res.json({ success: false, message: "AI Vibe Check Failed" });
   }
 };
+
+// Get Unread Notification Count
+export const getUnreadNotificationCount = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const count = await Notification.countDocuments({ recipient: userId, read: false });
+    res.json({ success: true, count });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};

@@ -43,14 +43,14 @@ const StoriesBar = () => {
           onClick={() => setShowModel(true)}
           className="rounded-lg shadow-sm min-w-30 max-w-30 max-h-40 aspect-[3/4] cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-dashed border-indigo-300 dark:border-slate-600 bg-gradient-to-b from-indigo-50 to-white dark:from-slate-800 dark:to-slate-900"
         >
-          <div className="h-full flex flex-col items-center justify-center p-4">
-            <div className="size-10 bg-indigo-500 rounded-full flex items-center justify-center mb-3 shadow-lg shadow-indigo-200 dark:shadow-none">
+          <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+            <div className="size-10 bg-indigo-500 rounded-full flex items-center justify-center mb-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-gradient-to-br from-indigo-500 to-purple-600">
               <Plus className="size-6 text-white" />
             </div>
-            <p className="text-sm font-medium text-slate-700 dark:text-gray-200 text-center">
+            <p className="text-sm font-bold text-slate-800 dark:text-gray-100">
               Create Story
             </p>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
               Share moments
             </p>
           </div>

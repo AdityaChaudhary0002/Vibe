@@ -42,7 +42,7 @@ const Sidebar = ({ setSidebarOpen }) => {
             alt="Vibe"
             className="w-10 h-10 object-contain"
           />
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-white dark:via-gray-400 dark:to-gray-200 bg-clip-text text-transparent bg-[length:200%_auto] animate-shine">
             Vibe
           </h1>
         </div>
@@ -95,7 +95,7 @@ const Sidebar = ({ setSidebarOpen }) => {
           </span>
           <button
             onClick={toggleTheme}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 shadow-sm transition-all hover:shadow-md"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 shadow-sm transition-all hover:shadow-md cursor-pointer"
           >
             {theme === "light" ? (
               <>

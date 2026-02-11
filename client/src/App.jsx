@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import CreatePost from "./pages/CreatePost";
 import Notifications from "./pages/Notifications";
 import Layout from "./pages/Layout";
+import Loading from "./components/Loading";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
@@ -18,7 +19,6 @@ import { fetchUser } from "./features/user/userSlice.js";
 import { fetchConnections } from "./features/connections/connectionSlice.js";
 import { addMessage } from "./features/messages/messagesSlice.js";
 import Notification from "./components/Notification.jsx";
-import Loading from "./components/Loading";
 
 const App = () => {
   const { user, isLoaded } = useUser();
@@ -26,6 +26,8 @@ const App = () => {
   const dispatch = useDispatch();
   const { pathname } = useLocation();
   const pathnameRef = useRef(pathname);
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,7 +58,15 @@ const App = () => {
         } else {
           toast.custom(
             (t) => {
-              <Notification t={t} message={message} />;
+              // Note: Notification component needs to be returned properly? 
+              // The original code had: <Notification t={t} message={message} />; inside a function block?
+              // Ah, toast.custom takes (t) => JSX.
+              // Original: (t) => { <Notification ... /> } -> this returns undefined if no return statement!
+              // Wait, original code (Step 2169, line 58):
+              // (t) => { <Notification t={t} message={message} />; },
+              // This is a bug in original code too? { <Component /> } is void. ({ <Component /> }) or { return <Component /> } is correct.
+              // But let's restore it as is first, or fix it if I can.
+              return <Notification t={t} message={message} />;
             },
             { position: "bottom-right" }
           );
