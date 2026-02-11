@@ -24,6 +24,9 @@ const postSchema = new mongoose.Schema(
   { timestamps: true, minimize: false }
 );
 
+// Index for better performance
+postSchema.index({ user: 1, createdAt: -1 });
+
 const Post = mongoose.model("Post", postSchema);
 
 export default Post;

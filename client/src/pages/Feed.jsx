@@ -9,6 +9,8 @@ import { useAuth } from "@clerk/clerk-react";
 import api from "../api/axios.js";
 import toast from "react-hot-toast";
 
+import PostSkeleton from "../components/PostSkeleton";
+
 const Feed = () => {
   const [feeds, setFeeds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,17 +61,24 @@ const Feed = () => {
     fetchFeed(nextPage);
   };
 
-  return !loading ? (
+  return (
     <div className="h-full overflow-y-scroll no-scrollbar py-10 xl:pr-5 flex items-start justify-center xl:gap-8">
       {/* Stories and post list */}
-      <div>
+      <div className="w-full max-w-2xl">
         <StoriesBar />
         <div className="p-4 space-y-6">
-          {feeds.map((post) => (
-            <PostCard key={post._id} post={post} />
-          ))}
+          {loading ? (
+            // Skeleton Loading State
+            [1, 2, 3].map((n) => <PostSkeleton key={n} />)
+          ) : (
+            // Feed Content
+            feeds.map((post, index) => (
+              <PostCard key={post._id} post={post} index={index} />
+            ))
+          )}
 
-          {hasMore && (
+          {/* Load More Button */}
+          {!loading && hasMore && (
             <div className="flex justify-center pt-4">
               <button
                 onClick={handleLoadMore}
@@ -81,20 +90,24 @@ const Feed = () => {
             </div>
           )}
 
-          {!hasMore && feeds.length > 0 && (
+          {!loading && !hasMore && feeds.length > 0 && (
             <p className="text-center text-gray-400 text-sm py-4">You're all caught up! 🎉</p>
+          )}
+
+          {!loading && feeds.length === 0 && ( // Empty State
+            <div className="text-center py-10">
+              <p className="text-gray-500">No posts yet. Be the first! 🚀</p>
+            </div>
           )}
         </div>
       </div>
 
       {/* Right sidebar */}
-      <div className="max-xl:hidden sticky top-0 space-y-4">
+      <div className="max-xl:hidden sticky top-0 space-y-4 w-80">
         <TrendingBar />
         <RecentMessages />
       </div>
     </div>
-  ) : (
-    <Loading />
   );
 };
 

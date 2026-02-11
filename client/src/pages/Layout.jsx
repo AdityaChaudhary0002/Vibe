@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import Loading from "../components/Loading";
 import { useSelector } from "react-redux";
@@ -10,6 +9,7 @@ import VoiceAssistant from "../components/VoiceAssistant";
 const Layout = () => {
   const user = useSelector((state) => state.user.value);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
 
   return user ? (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 flex relative">
@@ -52,7 +52,8 @@ const Layout = () => {
           </button>
         </div>
 
-        <div className="h-full">
+        {/* Animated Content Wrapper */}
+        <div className="h-full animate-fadeInUp" key={location.pathname}>
           <Outlet />
         </div>
 

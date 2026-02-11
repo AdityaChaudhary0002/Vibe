@@ -189,6 +189,7 @@ const Profile = () => {
                         <img
                           src={image}
                           key={index}
+                          loading="lazy"
                           className="w-64 aspect-video object-cover"
                           alt=""
                         />

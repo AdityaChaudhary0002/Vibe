@@ -156,10 +156,10 @@ const CreatePost = () => {
 
               <button
                 onClick={() => setShowAiPrompt(!showAiPrompt)}
-                className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition cursor-pointer"
+                className="flex items-center gap-2 text-sm bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 px-3 py-1.5 rounded-full hover:bg-indigo-100 dark:hover:bg-slate-700 transition-all active:scale-95 cursor-pointer border border-indigo-200 dark:border-indigo-900 shadow-sm"
               >
-                <Wand2 className="size-5 text-indigo-500" />
-                <span className="hidden sm:block text-indigo-500">
+                <Wand2 className="size-4" />
+                <span className="hidden sm:block font-medium">
                   AI Caption
                 </span>
               </button>
@@ -190,20 +190,23 @@ const CreatePost = () => {
           </div>
 
           {showAiPrompt && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-4 p-3 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-slate-800 dark:to-slate-800 border border-indigo-100 dark:border-indigo-900 animate-fadeInUp">
+              <Wand2 className="size-5 text-indigo-500 animate-pulse" />
               <input
                 type="text"
-                placeholder="Enter prompt for AI..."
-                className="w-full text-sm border border-gray-300 dark:border-gray-700 dark:bg-slate-800 dark:text-white rounded-md p-2 outline-none"
+                placeholder="Describe your vibe for AI magic..."
+                className="w-full text-sm bg-transparent border-none outline-none text-slate-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500"
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAiGenerate()}
+                autoFocus
               />
               <button
                 onClick={handleAiGenerate}
-                className="bg-indigo-600 text-white p-2 rounded-md text-sm"
+                disabled={loading}
+                className="bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 font-medium px-4 py-1.5 rounded-lg text-xs shadow-sm hover:shadow-md transition-all active:scale-95"
               >
-                Generate
+                {loading ? "Magic..." : "Generate"}
               </button>
             </div>
           )}

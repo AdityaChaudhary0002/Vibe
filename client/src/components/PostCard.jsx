@@ -8,7 +8,7 @@ import { useAuth } from "@clerk/clerk-react";
 import api from "../api/axios.js";
 import toast from "react-hot-toast";
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, index }) => {
   const postWithHashtags = post.content.replace(
     /(#\w+)/g,
     '<span class="text-blue-600 dark:text-blue-400 font-medium">$1</span>'
@@ -139,16 +139,31 @@ const PostCard = ({ post }) => {
       )}
 
       {/* Images */}
-      <div className="grid grid-cols-2 gap-2">
-        {post.image_urls.map((img, index) => (
-          <img
-            src={img}
-            key={index}
-            className={`w-full h-48 object-cover rounded-lg ${post.image_urls.length === 1 && "col-span-2 h-auto"}`}
-            alt=""
-          />
-        ))}
-      </div>
+      {post.image_urls && post.image_urls.length > 0 && (
+        <div className="mt-3 rounded-xl overflow-hidden shadow-sm aspect-video bg-gray-100 dark:bg-gray-800">
+          {post.image_urls.length === 1 ? (
+            <img
+              src={post.image_urls[0]}
+              alt="Post"
+              loading={index < 2 ? "eager" : "lazy"}
+              fetchPriority={index < 2 ? "high" : "auto"}
+              className="w-full h-auto object-cover max-h-[500px] hover:scale-105 transition-transform duration-500 cursor-pointer"
+            />
+          ) : (
+            <div className="grid grid-cols-2 gap-1 h-full">
+              {post.image_urls.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`Post ${idx + 1}`}
+                  loading={index < 2 ? "eager" : "lazy"}
+                  className="w-full h-48 object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400 text-sm pt-2 border-t border-gray-300 dark:border-gray-700">

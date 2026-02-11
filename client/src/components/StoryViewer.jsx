@@ -1,11 +1,13 @@
-import { BadgeCheck, Trash2, X } from "lucide-react";
+import { BadgeCheck, Trash2, X, Send, Heart, Flame, Laugh, ThumbsUp } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import api from "../api/axios.js";
 import toast from "react-hot-toast";
+import { createPortal } from "react-dom";
 
 const StoryViewer = ({ viewStory, setViewStory, fetchStories }) => {
   const [progress, setProgress] = useState(0);
+  const [reply, setReply] = useState("");
   const { getToken, userId } = useAuth();
 
   useEffect(() => {
@@ -37,6 +39,26 @@ const StoryViewer = ({ viewStory, setViewStory, fetchStories }) => {
 
   const handleClose = () => {
     setViewStory(null);
+  };
+
+  const handleSendReply = async (textToSend = reply) => {
+    if (!textToSend || !textToSend.trim()) return;
+
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("to_user_id", viewStory.user._id);
+      formData.append("text", `Replied to story: ${textToSend}`);
+
+      await api.post("/api/message/send", formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success("Reply sent! 🚀");
+      setReply("");
+    } catch (error) {
+      toast.error("Failed to send reply");
+    }
   };
 
   const handleDelete = async () => {
@@ -96,9 +118,11 @@ const StoryViewer = ({ viewStory, setViewStory, fetchStories }) => {
     }
   };
 
-  return (
+  const isOwner = userId === viewStory.user?._id;
+
+  return createPortal(
     <div
-      className="fixed inset-0 h-screen bg-black bg-opacity-90 z-110 flex items-center justify-center"
+      className="fixed inset-0 h-screen bg-black bg-opacity-90 z-[110] flex items-center justify-center"
       style={{
         backgroundColor:
           viewStory.media_type === "text"
@@ -107,7 +131,7 @@ const StoryViewer = ({ viewStory, setViewStory, fetchStories }) => {
       }}
     >
       {/* Process Bar */}
-      <div className=" absolute top-0 left-0 w-full h-1 bg-gray-700">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gray-700 z-[120]">
         <div
           className="h-full bg-white transition-all duration-100 linear"
           style={{ width: `${progress}%` }}
@@ -115,7 +139,7 @@ const StoryViewer = ({ viewStory, setViewStory, fetchStories }) => {
       </div>
 
       {/* User info - top left */}
-      <div className=" absolute top-4 left-4 flex items-center space-x-3 p-2 px-4 sm:p-4 sm:px-8 backdrop-blur-2xl rounded bg-black/50">
+      <div className="absolute top-4 left-4 flex items-center space-x-3 p-2 px-4 sm:p-4 sm:px-8 backdrop-blur-2xl rounded bg-black/50 z-[120]">
         <img
           src={viewStory.user?.profile_picture}
           alt=""
@@ -127,29 +151,71 @@ const StoryViewer = ({ viewStory, setViewStory, fetchStories }) => {
         </div>
       </div>
 
-      <div className=" absolute top-4 right-4 flex gap-4">
-        {/* Delete Button (Only for owner) */}
-        <button
-          onClick={handleDelete}
-          className="text-white text-3xl font-bold focus:outline-none bg-red-500/80 p-2 rounded-full hover:bg-red-600 transition cursor-pointer"
-        >
-          <Trash2 className="size-5" />
-        </button>
+      {/* Controls (Delete / Close) */}
+      <div className="absolute top-4 right-4 flex gap-4 z-[120]">
+        {isOwner && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+            className="text-white text-3xl font-bold focus:outline-none bg-red-500/80 p-2 rounded-full hover:bg-red-600 transition cursor-pointer"
+          >
+            <Trash2 className="size-5" />
+          </button>
+        )}
 
-        {/* Close Button */}
         <button
-          onClick={handleClose}
-          className="text-white text-3xl font-bold focus:outline-none"
+          onClick={(e) => { e.stopPropagation(); handleClose(); }}
+          className="text-white text-3xl font-bold focus:outline-none bg-black/20 p-2 rounded-full hover:bg-black/40 transition cursor-pointer backdrop-blur-md"
         >
-          <X className="size-8 hover:scale-110 transition cursor-pointer" />
+          <X className="size-6" />
         </button>
       </div>
 
       {/* Content Wrapper */}
-      <div className="max-w-[90vw] max-h-[90vh] flex items-center justify-center">
+      <div className="max-w-[100vw] max-h-[80vh] flex items-center justify-center p-4">
         {renderContent()}
       </div>
-    </div>
+
+      {/* Reply Section (Bottom) */}
+      {!isOwner && (
+        <div
+          className="absolute bottom-4 left-0 w-full px-4 flex flex-col gap-3 z-[120]"
+          onClick={(e) => e.stopPropagation()} // Prevent close on click
+        >
+          {/* Quick Reactions */}
+          <div className="flex gap-4 justify-center">
+            {["❤️", "🔥", "😂", "😮", "👍"].map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => handleSendReply(emoji)}
+                className="text-2xl hover:scale-125 transition active:scale-95 cursor-pointer p-2 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-sm"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+
+          {/* Input */}
+          <div className="flex items-center gap-2 max-w-lg mx-auto w-full">
+            <input
+              type="text"
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendReply()}
+              placeholder="Send a message..."
+              className="flex-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-full px-6 py-3 text-white placeholder-white/60 focus:outline-none focus:border-white/50 transition"
+            />
+            <button
+              onClick={() => handleSendReply()}
+              disabled={!reply.trim()}
+              className="p-3 bg-white text-black rounded-full hover:bg-gray-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              <Send size={20} className="ml-0.5" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>,
+    document.body
   );
 };
 

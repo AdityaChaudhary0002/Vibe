@@ -340,13 +340,20 @@ export const getUserConnections = async (req, res) => {
 export const getUserProfiles = async (req, res) => {
   try {
     const { profileId } = req.body;
-    const profile = await User.findById(profileId)
-      .populate("followers", "full_name username profile_picture")
-      .populate("following", "full_name username profile_picture");
+    const [profile, posts] = await Promise.all([
+      User.findById(profileId)
+        .populate("followers", "full_name username profile_picture")
+        .populate("following", "full_name username profile_picture"),
+      Post.find({ user: profileId })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .populate("user"),
+    ]);
+
     if (!profile) {
       return res.json({ success: false, message: "Profile not found" });
     }
-    const posts = await Post.find({ user: profileId }).populate("user");
+
     res.json({ success: true, profile, posts });
   } catch (error) {
     console.log(error);
@@ -362,7 +369,8 @@ export const getNotifications = async (req, res) => {
     const notifications = await Notification.find({ recipient: userId })
       .populate("sender", "full_name profile_picture")
       .populate("post", "image_urls")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .limit(20);
 
     await Notification.updateMany({ recipient: userId, read: false }, { read: true });
 

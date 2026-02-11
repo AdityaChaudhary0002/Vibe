@@ -70,3 +70,15 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Enforce Finger Cursor */
+button,
+a,
+label,
+input[type="submit"],
+input[type="button"],
+select,
+[role="button"],
+.cursor-pointer {
+  cursor: pointer !important;
+}

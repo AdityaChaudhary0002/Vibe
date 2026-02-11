@@ -16,28 +16,32 @@ const Discover = () => {
   const [loading, setLoading] = useState(false);
   const { getToken } = useAuth();
 
-  const handleSearch = async (e) => {
-    if (e.key === "Enter") {
-      try {
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (input.trim()) {
+        try {
+          setLoading(true);
+          const token = await getToken();
+          const { data } = await api.post(
+            "/api/user/discover",
+            { input },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          data.success ? setUsers(data.users) : toast.error(data.message);
+        } catch (error) {
+          toast.error(error.message);
+        } finally {
+          setLoading(false);
+        }
+      } else {
         setUsers([]);
-        setLoading(true);
-        const token = await getToken();
-        const { data } = await api.post(
-          "/api/user/discover",
-          { input },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        data.success ? setUsers(data.users) : toast.error(data.message);
-        setLoading(false);
-        setInput("");
-      } catch (error) {
-        toast.error(error.message);
       }
-      setLoading(false);
-    }
-  };
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [input]);
 
   useEffect(() => {
     getToken().then((token) => {
@@ -67,7 +71,6 @@ const Discover = () => {
                 type="text"
                 onChange={(e) => setInput(e.target.value)}
                 value={input}
-                onKeyUp={handleSearch}
                 className="pl-10 sm:pl-12 w-full py-2 border border-gray-300 dark:border-gray-600 dark:bg-slate-800 dark:text-white rounded-md max-sm:text-sm focus:outline-none focus:border-indigo-500"
                 placeholder="Search people by name, username, bio or location..."
               />
