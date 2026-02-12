@@ -9,6 +9,7 @@ import {
   generatePostCaption,
   getTrendingHashtags,
   sharePost,
+  deletePost,
 } from "../controllers/postController.js";
 
 const postRouter = express.Router();
@@ -20,5 +21,6 @@ postRouter.post("/comment", protect, addComment);
 postRouter.post("/generate-caption", protect, generatePostCaption);
 postRouter.get("/trending", getTrendingHashtags);
 postRouter.post("/share", protect, sharePost);
+postRouter.post("/delete", protect, deletePost);
 
 export default postRouter;

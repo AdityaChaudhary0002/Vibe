@@ -127,24 +127,24 @@ const StoryModel = ({ setShowModel, fetchStories }) => {
                 setMode("text");
                 resetMedia();
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${mode === "text"
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${mode === "text"
                 ? "bg-white text-black shadow-lg"
-                : "text-gray-400 hover:text-white"
+                : "bg-white/5 text-white hover:bg-white/20"
                 }`}
             >
               <Type size={16} /> Text
             </button>
             <label
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer ${mode === "media"
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all cursor-pointer whitespace-nowrap ${mode === "media"
                 ? "bg-white text-black shadow-lg"
-                : "text-gray-400 hover:text-white"
+                : "bg-white/5 text-white hover:bg-white/20"
                 }`}
             >
               <input
                 onChange={handleMediaUpload}
                 type="file"
                 accept="image/*, video/*"
-                className="hidden"
+                style={{ display: "none" }}
               />
               <ImageIcon size={16} /> Media
             </label>

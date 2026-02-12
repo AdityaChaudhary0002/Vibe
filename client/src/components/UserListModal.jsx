@@ -3,15 +3,25 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { X } from "lucide-react";
 
+import ReactDOM from "react-dom";
+
 const UserListModal = ({ title, users, onClose }) => {
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md h-[400px] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+    return ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+            <div
+                className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-[500px] h-auto max-h-[600px] flex flex-col overflow-hidden relative"
+                onClick={(e) => e.stopPropagation()}
+            >
                 {/* Header */}
-                <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h2>
-                    <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition">
-                        <X className="size-5 text-gray-500" />
+                <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/30">
+                    <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        {title}
+                        <span className="bg-gray-200 dark:bg-gray-700 text-xs px-2 py-0.5 rounded-full text-gray-600 dark:text-gray-300">
+                            {users.length}
+                        </span>
+                    </h2>
+                    <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-500 transition-colors">
+                        <X className="size-4" />
                     </button>
                 </div>
 
@@ -36,7 +46,8 @@ const UserListModal = ({ title, users, onClose }) => {
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

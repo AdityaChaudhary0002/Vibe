@@ -61,6 +61,18 @@ const Feed = () => {
     fetchFeed(nextPage);
   };
 
+  const observer = React.useRef();
+  const lastPostElementRef = React.useCallback(node => {
+    if (loading || loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        handleLoadMore();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, loadingMore, hasMore]);
+
   return (
     <div className="h-full overflow-y-scroll no-scrollbar py-10 xl:pr-5 flex items-start justify-center xl:gap-8">
       {/* Stories and post list */}
@@ -77,16 +89,13 @@ const Feed = () => {
             ))
           )}
 
-          {/* Load More Button */}
-          {!loading && hasMore && (
-            <div className="flex justify-center pt-4">
-              <button
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-                className="px-6 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition disabled:opacity-50 flex items-center gap-2"
-              >
-                {loadingMore ? "Loading..." : "Load More Posts"}
-              </button>
+          {/* Infinite Scroll Trigger */}
+          <div ref={lastPostElementRef} className="h-4"></div>
+
+          {/* Loading More Indicator */}
+          {loadingMore && (
+            <div className="flex justify-center p-4">
+              <Loading />
             </div>
           )}
 

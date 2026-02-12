@@ -36,24 +36,21 @@ const StoriesBar = () => {
   }, []);
 
   return (
-    <div className="w-screen sm:w-[calc(100vw-240px)] lg:max-w-2xl no-scrollbar overflow-x-auto px-4">
-      <div className="flex gap-4 pb-5">
+    <div className="w-screen sm:w-[calc(100vw-240px)] lg:max-w-2xl no-scrollbar overflow-x-auto px-1 py-2">
+      <div className="flex gap-3 pb-2">
         {/* Add Story card */}
         <div
           onClick={() => setShowModel(true)}
-          className="rounded-lg shadow-sm min-w-30 max-w-30 max-h-40 aspect-[3/4] cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-dashed border-indigo-300 dark:border-slate-600 bg-gradient-to-b from-indigo-50 to-white dark:from-slate-800 dark:to-slate-900"
+          className="relative group rounded-2xl shadow-sm min-w-[100px] max-w-[100px] h-[160px] cursor-pointer hover:-translate-y-1 transition-all duration-300 overflow-hidden"
         >
-          <div className="h-full flex flex-col items-center justify-center p-4 text-center">
-            <div className="size-10 bg-indigo-500 rounded-full flex items-center justify-center mb-2 shadow-lg shadow-indigo-200 dark:shadow-none bg-gradient-to-br from-indigo-500 to-purple-600">
+          <div className="absolute inset-0 bg-slate-100 dark:bg-slate-800 flex flex-col items-center justify-end p-2 pb-3">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-10 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg shadow-indigo-300 dark:shadow-indigo-900 group-hover:scale-110 transition-transform">
               <Plus className="size-6 text-white" />
             </div>
-            <p className="text-sm font-bold text-slate-800 dark:text-gray-100">
-              Create Story
-            </p>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
-              Share moments
-            </p>
+            <span className="text-xs font-bold text-slate-700 dark:text-white z-10">Create</span>
           </div>
+          {/* Gradient Overlay on hover */}
+          <div className="absolute inset-0 bg-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
 
         {/* Story Cards */}
@@ -61,35 +58,37 @@ const StoriesBar = () => {
           <div
             key={index}
             onClick={() => setViewStory(story)}
-            className={`relative rounded-lg shadow min-w-30 max-w-30 cursor-pointer hover:shadow-lg transition-all duration-200 bg-gradient-to-b from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95`}
+            className="relative group rounded-2xl shadow-sm min-w-[100px] max-w-[100px] h-[160px] cursor-pointer hover:-translate-y-1 transition-all duration-300 overflow-hidden ring-2 ring-transparent hover:ring-indigo-500/50"
           >
-            <img
-              src={story.user.profile_picture}
-              className="aspect-square object-cover absolute size-8 top-3 left-3 z-10 rounded-full ring ring-gray-100 shadow"
-              alt=""
-            />
-            <p className=" absolute top-18 left-3 text-white/60 text-sm truncate max-w-24">
-              {story.content}
-            </p>
-            <p className="text-white absolute bottom-1 right-2 z-10 text-xs">
-              {moment(story.createdAt).fromNow()}
-            </p>
-            {story.media_type !== "text" && (
-              <div className=" absolute inset-0 z-1 rounded-lg bg-black overflow-hidden">
-                {story.media_type === "image" ? (
-                  <img
-                    src={story.media_url}
-                    className="h-full w-full object-cover hover:scale-110 transition duration-500 opacity-70 hover:opacity-80"
-                    alt=""
-                  />
-                ) : (
-                  <video
-                    src={story.media_url}
-                    className="h-full w-full object-cover hover:scale-110 transition duration-500 opacity-70 hover:opacity-80"
-                  />
-                )}
-              </div>
-            )}
+            {/* Background Image/Video Preview */}
+            <div className="absolute inset-0 bg-slate-900">
+              {story.media_type === "video" ? (
+                <video src={story.media_url} className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-700" muted />
+              ) : (
+                <img src={story.media_url || story.user.profile_picture} className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-transform duration-700" alt="" />
+              )}
+              {/* Gradient shade at bottom for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            </div>
+
+            {/* Profile Ring - REMOVED GRADIENT, now just border if needed, or simple */}
+            <div className="absolute top-2 left-2">
+              <img
+                src={story.user.profile_picture}
+                className="size-8 rounded-full object-cover border-2 border-white dark:border-slate-900 shadow-md"
+                alt=""
+              />
+            </div>
+
+            {/* Username & Time */}
+            <div className="absolute bottom-2 left-2 right-2 text-white">
+              <p className="text-xs font-bold truncate drop-shadow-md">
+                {story.user.full_name.split(" ")[0]}
+              </p>
+              <p className="text-[10px] font-medium opacity-80 drop-shadow-md">
+                {moment(story.createdAt).fromNow()}
+              </p>
+            </div>
           </div>
         ))}
       </div>

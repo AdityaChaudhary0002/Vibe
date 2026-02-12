@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateUser } from "../features/user/userSlice.js";
 import { useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
+import ReactDOM from "react-dom";
 
 const ProfileModel = ({ setShowEdit }) => {
   const dispatch = useDispatch();
@@ -49,9 +50,9 @@ const ProfileModel = ({ setShowEdit }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden relative" onClick={(e) => e.stopPropagation()}>
 
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center bg-gray-50 dark:bg-slate-900/50">
@@ -227,7 +228,8 @@ const ProfileModel = ({ setShowEdit }) => {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

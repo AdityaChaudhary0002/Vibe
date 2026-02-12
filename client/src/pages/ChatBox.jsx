@@ -1,8 +1,7 @@
-
 import React, { useEffect, useRef, useState } from "react";
-import { ImageIcon, SendHorizonal, Phone, Video, ArrowLeft } from "lucide-react";
+import { ImageIcon, SendHorizonal, Phone, Video, ArrowLeft, Trash2, Mic, Sparkles } from "lucide-react";
 import moment from "moment";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
@@ -11,14 +10,141 @@ import {
   addMessage,
   fetchMessages,
   resetMessages,
+  deleteMessageFromState,
 } from "../features/messages/messagesSlice.js";
 import { toast } from "react-hot-toast";
 
 const ChatBox = () => {
   const { messages } = useSelector((state) => state.messages);
   const { userId } = useParams();
-  const { getToken } = useAuth();
+  const { getToken, userId: senderId } = useAuth();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const sendCallMessage = async (text) => {
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("to_user_id", userId);
+      formData.append("text", text);
+      const { data } = await api.post("/api/message/send", formData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        dispatch(addMessage(data.message));
+      }
+    } catch (error) {
+      toast.error("Failed to send call invite");
+    }
+  };
+
+  const handleVideoCall = () => {
+    const roomId = [senderId, userId].sort().join('_');
+    sendCallMessage(`[VIDEO_CALL|${roomId}]`);
+    navigate(`/room/${roomId}`);
+  };
+
+  const handleVoiceCall = () => {
+    const roomId = [senderId, userId].sort().join('_');
+    sendCallMessage(`[VOICE_CALL|${roomId}]`);
+    navigate(`/room/${roomId}?type=voice`);
+  };
+
+  /* AI Voice & Translation State */
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  const handleMicClick = async () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        await handleTranscribe(audioBlob);
+        stream.getTracks().forEach((track) => track.stop()); // Stop mic
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast("Listening...", { icon: "🎙️" });
+    } catch (error) {
+      console.error("Error accessing mic:", error);
+      toast.error("Mic Access Error: " + (error.message || "Unknown error"));
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleTranscribe = async (audioBlob) => {
+    const loadingToast = toast.loading("Processing voice...");
+    try {
+      const formData = new FormData();
+      // Create a file from blob
+      const file = new File([audioBlob], "recording.webm", { type: "audio/webm" });
+      formData.append("audio", file);
+
+      const token = await getToken();
+      const { data } = await api.post("/api/ai/transcribe", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data"
+        },
+      });
+
+      if (data.success) {
+        setText((prev) => prev + " " + data.text); // Append text
+        toast.success("Voice transcribed!", { id: loadingToast });
+      } else {
+        toast.error("Transcription failed: " + (data.message || "Unknown error"), { id: loadingToast });
+      }
+    } catch (error) {
+      console.error("Transcription API Error:", error);
+      toast.error("Process Error: " + (error.response?.data?.message || error.response?.data?.error || error.message), { id: loadingToast });
+    }
+  };
+
+  const handleTranslate = async () => {
+    if (!text.trim()) return;
+    const loadingToast = toast.loading("Translating...");
+    try {
+      const token = await getToken();
+      const { data } = await api.post("/api/ai/translate", { text }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (data.success) {
+        setText(data.translation);
+        toast.success("Magic Translate! ✨", { id: loadingToast });
+      } else {
+        toast.error("Translation failed", { id: loadingToast });
+      }
+    } catch (error) {
+      toast.error("Translation error", { id: loadingToast });
+    }
+  };
 
   const [text, setText] = useState("");
   const [image, setImage] = useState(null);
@@ -62,6 +188,29 @@ const ChatBox = () => {
     }
   };
 
+  const handleDeleteMessage = async (messageId) => {
+    if (!window.confirm("Delete this message?")) return;
+
+    try {
+      const token = await getToken();
+      // Optimistic update
+      dispatch(deleteMessageFromState(messageId));
+
+      const { data } = await api.post("/api/message/delete", { messageId }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!data.success) {
+        toast.error(data.message);
+        // Re-fetch or revert if failed? For now, fetch is safer but lazy.
+        fetchUserMessages();
+      }
+    } catch (error) {
+      toast.error("Failed to delete message");
+      fetchUserMessages();
+    }
+  }
+
   useEffect(() => {
     fetchUserMessages();
 
@@ -84,134 +233,255 @@ const ChatBox = () => {
 
   return (
     user && (
-      <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950">
-        <div className="flex items-center justify-between p-3 md:px-6 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-gray-800 shadow-sm z-10">
-          <div className="flex items-center gap-3">
-            <Link to="/messages" className="md:hidden">
-              <ArrowLeft className="text-slate-600 dark:text-gray-300" />
+      <div className="flex flex-col h-screen bg-slate-50 dark:bg-slate-950/50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/20 via-slate-50 to-slate-100 dark:from-indigo-950/20 dark:via-slate-950 dark:to-slate-950 transition-colors duration-500">
+
+        {/* Header - Glassmorphic */}
+        <div className="sticky top-0 z-50 px-4 py-3 md:px-6 flex items-center justify-between bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-slate-800/50 shadow-sm transition-all">
+          <div className="flex items-center gap-4">
+            <Link
+              to="/messages"
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-gray-300 transition md:hidden"
+            >
+              <ArrowLeft size={20} />
             </Link>
-            <div className="relative">
+
+            <div className="relative group cursor-pointer" onClick={() => navigate(`/profile/${user._id}`)}>
+              <div className="absolute inset-0 bg-indigo-500 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
               <img
                 src={user.profile_picture}
-                className="size-10 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                className="relative size-11 rounded-full object-cover border-2 border-white dark:border-slate-800 shadow-sm"
                 alt=""
               />
-              <div className="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900"></div>
+              <div className="absolute bottom-0 right-0 size-3.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-900 animate-pulse"></div>
             </div>
-            <div>
-              <h3 className="font-semibold text-slate-800 dark:text-white leading-tight">
+
+            <div className="cursor-pointer" onClick={() => navigate(`/profile/${user._id}`)}>
+              <h3 className="font-bold text-lg text-slate-800 dark:text-white leading-tight hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
                 {user.full_name}
               </h3>
-              <p className="text-xs text-green-500 font-medium">Online</p>
+              <p className="text-xs text-green-600 dark:text-green-400 font-bold tracking-wide flex items-center gap-1">
+                Active Now
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-slate-500 dark:text-gray-400">
-            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition cursor-pointer" onClick={() => toast.success("Voice Call coming soon!")}>
-              <Phone size={20} />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleVoiceCall}
+              className="p-3 rounded-full text-slate-500 dark:text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/20 dark:hover:text-indigo-400 transition-all duration-300"
+              title="Voice Call"
+            >
+              <Phone size={20} strokeWidth={2.5} />
             </button>
-            <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition cursor-pointer" onClick={() => toast.success("Video Call coming soon!")}>
-              <Video size={22} />
+            <button
+              onClick={handleVideoCall}
+              className="p-3 rounded-full text-slate-500 dark:text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/20 dark:hover:text-indigo-400 transition-all duration-300"
+              title="Video Call"
+            >
+              <Video size={22} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 custom-scrollbar bg-slate-50 dark:bg-slate-950">
-          {messages
-            .toSorted((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-            .map((message, index) => {
-              const isMyMessage = message.from_user_id === userId || message.from_user_id?._id === userId; // Handle population if needed
-              // Actually, current implementation: message.to_user_id check is used to determine side.
-              // Original: message.to_user_id !== user._id ? "items-start" : "items-end"
-              // `user` state is the OTHER person.
-              // So if message to OTHER person, it is SENT by me. So items-end.
-              // Wait. 
-              // userId from params is the OTHER person's ID.
-              // Logged in user ID is in Redux or Token.
-              // Original code: `message.to_user_id !== user._id`
-              // `user._id` is the OTHER person.
-              // If to_user_id IS NOT the OTHER person, it means it is TO ME. So RECEIVE.
-              // Wait, logic in original code:
-              // `message.to_user_id !== user._id` ? "items-start" : "items-end"
-              // If to_user_id (recipient) is NOT the chat partner, then recipient is ME.
-              // If recipient is ME, it should be LEFT (start).
-              // If recipient is PARTNER, it should be RIGHT (end).
-              // Logic seems correct.
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 custom-scrollbar">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full opacity-60">
+              <div className="size-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-4">
+                <Sparkles className="size-10 text-indigo-500" />
+              </div>
+              <p className="text-slate-500 dark:text-gray-400 font-medium">No messages yet. Start the vibes! ✨</p>
+            </div>
+          ) : (
+            messages
+              .toSorted((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+              .map((message, index) => {
+                const isMe = message.from_user_id === senderId || message.from_user_id?._id === senderId;
+                const isCallEnded = (type, id) => {
+                  return messages.some(m => m.text.includes(`🚫 ${type} Call Ended||${id}`));
+                };
 
-              const isMe = message.to_user_id === user._id;
-
-              return (
-                <div
-                  key={index}
-                  className={`flex flex-col ${!isMe ? "items-start" : "items-end"}`}
-                >
+                return (
                   <div
-                    className={`relative px-4 py-2 max-w-[75%] md:max-w-md break-words rounded-2xl shadow-sm text-[15px] 
-                      ${!isMe
-                        ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-gray-100 rounded-bl-sm border border-gray-100 dark:border-gray-700"
-                        : "bg-indigo-600 text-white rounded-br-sm"
-                      }`}
+                    key={index}
+                    className={`flex w-full ${isMe ? "justify-end" : "justify-start"}`}
                   >
-                    {message.message_type === "image" && (
-                      <img
-                        src={message.media_url}
-                        className="w-full rounded-lg mb-2 mt-1 max-h-60 object-cover"
-                        alt="Shared media"
-                      />
-                    )}
-                    <p className="leading-relaxed">{message.text}</p>
-                    <p className={`text-[10px] mt-1 text-right opacity-70 ${!isMe ? "text-gray-400" : "text-indigo-100"}`}>
-                      {moment(message.createdAt).format("h:mm A")}
-                    </p>
-                  </div>
-                </div>
-              )
-            })}
+                    <div className={`flex flex-col max-w-[85%] md:max-w-lg group ${isMe ? "items-end" : "items-start"}`}>
 
+                      <div className="flex items-end gap-2">
+                        {/* Avatar for receiver (only if not me) */}
+                        {!isMe && (
+                          <img
+                            src={user.profile_picture}
+                            className="size-6 rounded-full object-cover mb-1 shadow-sm opacity-80"
+                            alt=""
+                          />
+                        )}
+
+                        <div
+                          className={`relative px-5 py-3 shadow-sm text-[15px] leading-relaxed transition-all duration-200
+                            ${!isMe
+                              ? "bg-white dark:bg-slate-800 text-slate-700 dark:text-gray-100 rounded-2xl rounded-bl-none border border-gray-100 dark:border-slate-700/50"
+                              : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl rounded-br-none shadow-md shadow-indigo-500/20"
+                            }`}
+                        >
+                          {/* Image Attachment */}
+                          {message.message_type === "image" && (
+                            <img
+                              src={message.media_url}
+                              className="w-full rounded-xl mb-3 mt-1 max-h-72 object-cover border border-black/10 dark:border-white/10"
+                              alt="Shared media"
+                            />
+                          )}
+
+                          {/* Call Messages / Text */}
+                          {message.text.startsWith("[VIDEO_CALL|") ? (() => {
+                            const roomId = message.text.split("|")[1].replace("]", "").trim();
+                            const ended = isCallEnded("Video", roomId);
+                            return ended ? (
+                              <div className="flex items-center gap-2 bg-gray-100/20 backdrop-blur-sm px-4 py-2 rounded-lg font-bold opacity-80">
+                                <Video size={18} /> Call Ended
+                              </div>
+                            ) : (
+                              <Link
+                                to={`/room/${roomId}`}
+                                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg font-bold transition-colors shadow-sm"
+                              >
+                                <Video size={18} /> Join Video Call
+                              </Link>
+                            );
+                          })() : message.text.startsWith("[VOICE_CALL|") ? (() => {
+                            const roomId = message.text.split("|")[1].replace("]", "").trim();
+                            const ended = isCallEnded("Voice", roomId);
+                            return ended ? (
+                              <div className="flex items-center gap-2 bg-gray-100/20 backdrop-blur-sm px-4 py-2 rounded-lg font-bold opacity-80">
+                                <Phone size={18} /> Call Ended
+                              </div>
+                            ) : (
+                              <Link
+                                to={`/room/${roomId}?type=voice`}
+                                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm px-4 py-2 rounded-lg font-bold transition-colors shadow-sm"
+                              >
+                                <Phone size={18} /> Join Voice Call
+                              </Link>
+                            );
+                          })() : message.text.includes("Call Ended") ? (
+                            <div className="flex items-center gap-2 opacity-90 font-medium">
+                              <span className="size-2 bg-red-400 rounded-full animate-pulse"></span>
+                              {message.text.split("||")[0]}
+                            </div>
+                          ) : (
+                            <p>{message.text}</p>
+                          )}
+
+                          {/* Time & Delete */}
+                          <div className={`flex items-center justify-end gap-2 mt-1 -mb-1 ${isMe ? "text-indigo-100" : "text-slate-400"}`}>
+                            <span className="text-[10px] font-medium opacity-80">
+                              {moment(message.createdAt).format("h:mm A")}
+                            </span>
+                            {isMe && (
+                              <button
+                                onClick={() => handleDeleteMessage(message._id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-red-200"
+                                title="Delete"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+          )}
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="px-4">
-          <div className="flex items-center gap-3 pl-5 p-1.5 bg-white dark:bg-slate-900 w-full max-w-xl mx-auto border border-gray-300 dark:border-gray-700 shadow rounded-full mb-5">
-            <input
-              type="text"
-              className="flex-1 outline-none text-slate-700 dark:text-white bg-transparent"
-              placeholder="Type a message..."
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              onChange={(e) => setText(e.target.value)}
-              value={text}
-            />
+        {/* Input Area */}
+        <div className="p-4 bg-transparent">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-end gap-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-2 pl-4 rounded-3xl shadow-lg shadow-gray-100/50 dark:shadow-slate-900/50 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
 
-            <label htmlFor="image">
-              {image ? (
-                <img
-                  src={URL.createObjectURL(image)}
-                  className="h-8 rounded"
-                  alt=""
-                />
-              ) : (
-                <ImageIcon className="size-7 text-gray-400 dark:text-gray-500 cursor-pointer" />
-              )}
-              <input
-                type="file"
-                id="image"
-                accept="image/*"
-                hidden
-                onChange={(e) => setImage(e.target.files[0])}
+              {/* Actions: Mic & Image */}
+              <div className="flex items-center gap-1 pb-2">
+                <button
+                  onClick={handleMicClick}
+                  className={`p-2 rounded-full transition-all duration-300 ${isRecording
+                    ? "bg-red-500 text-white animate-pulse shadow-md shadow-red-500/30"
+                    : "text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-slate-800"
+                    }`}
+                  title={isRecording ? "Stop" : "Voice Message"}
+                >
+                  <Mic size={20} />
+                </button>
+
+                <label htmlFor="image" className="cursor-pointer">
+                  <div className="p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-slate-800 rounded-full transition-all">
+                    {image ? (
+                      <div className="relative">
+                        <img src={URL.createObjectURL(image)} className="size-6 rounded object-cover" alt="" />
+                        <div className="absolute -top-1 -right-1 size-2 bg-indigo-500 rounded-full border border-white"></div>
+                      </div>
+                    ) : (
+                      <ImageIcon size={20} />
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    id="image"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => setImage(e.target.files[0])}
+                  />
+                </label>
+
+                {text.trim() && !isRecording && (
+                  <button
+                    onClick={handleTranslate}
+                    className="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition-all"
+                    title="Translate"
+                  >
+                    <Sparkles size={18} />
+                  </button>
+                )}
+              </div>
+
+              {/* Text Input */}
+              <textarea
+                className="flex-1 bg-transparent border-none outline-none text-slate-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none py-3 min-h-[48px] max-h-32 custom-scrollbar text-sm"
+                placeholder={isRecording ? "Listening..." : "Type a message..."}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                onChange={(e) => setText(e.target.value)}
+                value={text}
+                disabled={isRecording}
+                rows={1}
+                style={{ height: 'auto', minHeight: '48px' }}
+                onInput={(e) => {
+                  e.target.style.height = 'auto';
+                  e.target.style.height = e.target.scrollHeight + 'px';
+                }}
               />
-            </label>
 
-            <button
-              onClick={sendMessage}
-              className="bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 cursor-pointer text-white p-2 rounded-full transition-all duration-300"
-            >
-              <SendHorizonal size={18} />
-            </button>
+              {/* Send Button */}
+              <button
+                onClick={sendMessage}
+                disabled={(!text.trim() && !image) || isRecording}
+                className="mb-1 p-3 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 text-white rounded-2xl shadow-lg shadow-indigo-500/30 disabled:opacity-50 disabled:shadow-none transition-all duration-300"
+              >
+                <SendHorizonal size={20} strokeWidth={2.5} className={text.trim() ? "translate-x-0.5" : ""} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
     )
   );
 };
-
 export default ChatBox;

@@ -246,3 +246,30 @@ export const sharePost = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// Delete Post
+export const deletePost = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { postId } = req.body;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.json({ success: false, message: "Post not found" });
+    }
+
+    if (post.user.toString() !== userId) {
+      return res.json({ success: false, message: "Unauthorized action" });
+    }
+
+    await Post.findByIdAndDelete(postId);
+
+    // Optional: Delete related notifications
+    await Notification.deleteMany({ post: postId });
+
+    res.json({ success: true, message: "Post deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};

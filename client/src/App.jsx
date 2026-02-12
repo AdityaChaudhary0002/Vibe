@@ -1,24 +1,26 @@
-import React, { useRef } from "react";
+import React, { useRef, lazy, Suspense, useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
-import Login from "./pages/Login";
-import Feed from "./pages/Feed";
-import Message from "./pages/Message";
-import ChatBox from "./pages/ChatBox";
-import Connections from "./pages/Connections";
-import Discover from "./pages/Discover";
-import Profile from "./pages/Profile";
-import CreatePost from "./pages/CreatePost";
-import Notifications from "./pages/Notifications";
-import Layout from "./pages/Layout";
-import Loading from "./components/Loading";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import toast, { Toaster } from "react-hot-toast";
-import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { fetchUser } from "./features/user/userSlice.js";
 import { fetchConnections } from "./features/connections/connectionSlice.js";
 import { addMessage } from "./features/messages/messagesSlice.js";
 import Notification from "./components/Notification.jsx";
+import Loading from "./components/Loading";
+
+// Lazy Imports
+const Login = lazy(() => import("./pages/Login"));
+const Feed = lazy(() => import("./pages/Feed"));
+const Message = lazy(() => import("./pages/Message"));
+const ChatBox = lazy(() => import("./pages/ChatBox"));
+const Connections = lazy(() => import("./pages/Connections"));
+const Discover = lazy(() => import("./pages/Discover"));
+const Profile = lazy(() => import("./pages/Profile"));
+const CreatePost = lazy(() => import("./pages/CreatePost"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Layout = lazy(() => import("./pages/Layout"));
+const VideoCall = lazy(() => import("./pages/VideoCall"));
 
 const App = () => {
   const { user, isLoaded } = useUser();
@@ -26,8 +28,6 @@ const App = () => {
   const dispatch = useDispatch();
   const { pathname } = useLocation();
   const pathnameRef = useRef(pathname);
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,7 +58,7 @@ const App = () => {
         } else {
           toast.custom(
             (t) => {
-              // Note: Notification component needs to be returned properly? 
+              // Note: Notification component needs to be returned properly?
               // The original code had: <Notification t={t} message={message} />; inside a function block?
               // Ah, toast.custom takes (t) => JSX.
               // Original: (t) => { <Notification ... /> } -> this returns undefined if no return statement!
@@ -81,19 +81,39 @@ const App = () => {
   return (
     <>
       <Toaster />
-      <Routes>
-        <Route path="/" element={!isLoaded ? <div className="h-screen w-full flex justify-center items-center"><Loading /></div> : (!user ? <Login /> : <Layout />)}>
-          <Route index element={<Feed />} />
-          <Route path="messages" element={<Message />} />
-          <Route path="messages/:userId" element={<ChatBox />} />
-          <Route path="connections" element={<Connections />} />
-          <Route path="discover" element={<Discover />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="profile/:profileId" element={<Profile />} />
-          <Route path="create-post" element={<CreatePost />} />
-          <Route path="notifications" element={<Notifications />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={
+        <div className="h-screen w-full flex justify-center items-center bg-white dark:bg-slate-900">
+          <Loading />
+        </div>
+      }>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              !isLoaded ? (
+                <div className="h-screen w-full flex justify-center items-center">
+                  <Loading />
+                </div>
+              ) : !user ? (
+                <Login />
+              ) : (
+                <Layout />
+              )
+            }
+          >
+            <Route index element={<Feed />} />
+            <Route path="messages" element={<Message />} />
+            <Route path="messages/:userId" element={<ChatBox />} />
+            <Route path="connections" element={<Connections />} />
+            <Route path="discover" element={<Discover />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="profile/:profileId" element={<Profile />} />
+            <Route path="create-post" element={<CreatePost />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="room/:roomId" element={<VideoCall />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </>
   );
 };

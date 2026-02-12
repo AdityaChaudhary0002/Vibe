@@ -54,42 +54,55 @@ const RecentMessages = () => {
   }, [user]);
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-transparent dark:border-gray-700 max-w-xs mt-4 p-4 min-h-20 rounded-md shadow text-xs text-slate-800 dark:text-gray-100">
-      <h3 className="font-semibold text-slate-800 dark:text-gray-100 mb-4">
-        Recent Messages
-      </h3>
-      <div className="flex flex-col max-h-56 overflow-y-scroll no-scrollbar">
-        {messages.map((message, index) => (
-          <Link
-            to={`/messages/${message.from_user_id._id}`}
-            key={index}
-            className="flex items-start rounded-md gap-2 py-2 hover:bg-slate-100 dark:hover:bg-gray-800 p-2"
-          >
-            <img
-              src={message.from_user_id.profile_picture}
-              className="size-8 rounded-full aspect-square object-cover"
-              alt=""
-            />
-            <div className="w-full">
-              <div className="flex justify-between">
-                <p className="font-medium">{message.from_user_id.full_name}</p>
-                <p className="text-[10px] text-slate-400">
-                  {moment(message.createdAt).fromNow()}
-                </p>
-              </div>
-              <div className="flex justify-between">
-                <p className="text-gray-500">
-                  {message.text ? message.text : "Media"}
-                </p>
+    <div className="max-w-xs w-full bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800 p-5 rounded-3xl shadow-lg mt-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-black text-slate-800 dark:text-white tracking-tight">
+          Recent Messages
+        </h3>
+        <Link to="/messages" className="text-xs font-black text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:underline">
+          View All
+        </Link>
+      </div>
+
+      <div className="flex flex-col space-y-2 max-h-64 overflow-y-auto no-scrollbar">
+        {messages.length > 0 ? (
+          messages.map((message, index) => (
+            <Link
+              to={`/messages/${message.from_user_id._id}`}
+              key={index}
+              className="group flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all duration-200"
+            >
+              <div className="relative shrink-0">
+                <img
+                  src={message.from_user_id.profile_picture}
+                  className="size-10 rounded-full object-cover shadow-sm group-hover:scale-105 transition-transform"
+                  alt=""
+                />
                 {!message.seen && (
-                  <p className="bg-indigo-500 text-white w-4 h-4 flex items-center justify-center rounded-full text-[10px]">
-                    1
-                  </p>
+                  <div className="absolute -top-1 -right-1 size-3 bg-indigo-500 border-2 border-white dark:border-slate-900 rounded-full" />
                 )}
               </div>
-            </div>
-          </Link>
-        ))}
+
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-baseline mb-0.5">
+                  <p className="text-sm font-bold text-slate-700 dark:text-gray-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    {message.from_user_id.full_name}
+                  </p>
+                  <p className="text-[10px] text-gray-500 font-medium shrink-0">
+                    {moment(message.createdAt).fromNow()}
+                  </p>
+                </div>
+                <p className={`text-xs truncate ${!message.seen ? 'font-bold text-slate-800 dark:text-white' : 'text-gray-500'}`}>
+                  {message.text || <span className="italic opacity-70">Media shared</span>}
+                </p>
+              </div>
+            </Link>
+          ))
+        ) : (
+          <div className="text-center py-6">
+            <p className="text-xs text-gray-400">No recent messages</p>
+          </div>
+        )}
       </div>
     </div>
   );

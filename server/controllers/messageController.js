@@ -121,3 +121,27 @@ export const getUserRecentMessages = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// Delete Message
+export const deleteMessage = async (req, res) => {
+  try {
+    const { userId } = req.auth();
+    const { messageId } = req.body;
+
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.json({ success: false, message: "Message not found" });
+    }
+
+    if (message.from_user_id.toString() !== userId) {
+      return res.json({ success: false, message: "Unauthorized action" });
+    }
+
+    await Message.findByIdAndDelete(messageId);
+
+    res.json({ success: true, message: "Message deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
