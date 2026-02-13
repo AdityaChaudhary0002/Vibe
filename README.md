@@ -1,65 +1,76 @@
-# 🚀 Vibe - Social Media Platform
+# 🚀 Vibe - Next Gen Social Platform
 
-Welcome to  Vibe**! 🌟
-A modern, feature-rich social networking application built to connect people, share moments, and vibe together. Whether you're posting updates, sharing stories that vanish in 24 hours, or messaging friends, PingUp handles it all seamlessly.
+Welcome to **Vibe**! 🌟
+A cutting-edge, feature-rich social networking application built for 2026. Connect with friends, share moments, and vibe together with real-time video calls, AI-powered chat, and a stunning glassmorphic UI.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- **🔐 Secure Authentication:** Powered by **Clerk** (Sign In, Sign Up, User Management).
-- **🏠 News Feed:** Create and view posts with text and images. Like and interact with content.
-- **📸 Stories:** Share fleeting moments with **24-hour disappearing stories** (handled by background jobs).
-- **🤝 Connections:** Send connection requests, follow/unfollow users, and build your network.
-- **📧 Email Notifications:** Get instant email alerts when someone sends you a connection request (powered by **Nodemailer**).
-- **💬 Messaging:** Real-time chat interface to stay in touch with your connections.
-- **🔍 Discover People:** Search for users by name, username, or location.
-- **🖼️ Media Uploads:** Fast and optimized image uploads using **ImageKit**.
-- **⚙️ Background Jobs:** Automated tasks like story deletion and reminders using **Inngest**.
+### 🎥 Real-Time Communication
+- **HD Video & Voice Calls:** Seamless, low-latency calls powered by **ZegoCloud (WebRTC)**.
+- **Instant Messaging:** Real-time chat with typing indicators and read receipts using **Socket.io**.
+- **Group Chats:** Create groups and stay connected with your circle.
+
+### 🤖 AI-Powered Experience
+- **Voice-to-Text:** Send voice messages that are instantly transcribed using **Groq (Whisper)**.
+- **Magic Translate:** Instantly translate chat messages into your language with **Gemini AI**.
+- **Smart Suggestions:** AI-driven content and connection recommendations.
+
+### 🎨 Modern UI/UX (2026 Design)
+- **Glassmorphism:** Premium, translucent design elements with blur effects.
+- **Dark Mode:** Fully supported, deeper and richer dark theme.
+- **Infinite Scroll:** Buttery smooth feed experience.
+- **Stories:** 24-hour disappearing stories with gradient rings and rich media support.
+
+### 🛠️ Core Social Features
+- **🔐 Secure Auth:** Powered by **Clerk** (Sign In, Sign Up, User Management).
+- **🏠 Smart Feed:** Personalized content delivery.
+- **🤝 Connections:** Follow/Unfollow system with "Active Now" status.
+- **📧 Notifications:** Real-time in-app and email alerts (via **Nodemailer**).
+- **🖼️ Optimized Media:** Fast image/video uploads via **ImageKit**.
+- **⚙️ Background Jobs:** Automated cleanup and tasks using **Inngest**.
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### **Frontend**
-- **React.js** (Vite) - Fast and modern UI library.
-- **Redux Toolkit** - State management for user data and connections.
-- **Tailwind CSS** - Utility-first CSS framework for styling.
-- **Lucide React** - Beautiful icons.
-- **React Router DOM** - Client-side routing.
-- **Axios** - HTTP client for API requests.
+- **React.js 19** (Vite) - Ultra-fast UI library.
+- **Tailwind CSS 4** - Next-gen styling engine.
+- **Redux Toolkit** - State management.
+- **Lucide React** - Modern iconography.
+- **ZegoCloud UIKit** - Video/Voice SDK.
 
 ### **Backend**
-- **Node.js & Express.js** - Robust server-side framework.
-- **MongoDB & Mongoose** - NoSQL database for flexible data storage.
-- **Nodemailer** - Sending emails via SMTP (Gmail).
-- **Inngest** - Serverless background job processing (e.g., deleting old stories).
-- **ImageKit** - Cloud-based image optimization and storage.
-- **Clerk SDK** - Backend validation for secure API routes.
+- **Node.js & Express.js** - Scalable server framework.
+- **MongoDB & Mongoose** - Flexible NoSQL database.
+- **Socket.io** - Real-time bidirectional communication.
+- **Google Generative AI (Gemini)** - LLM integration.
+- **Groq SDK** - High-performance AI inference.
+- **Inngest** - Event-driven background jobs.
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these steps to set up the project locally on your machine.
+Follow these steps to set up the project locally.
 
 ### **1. Clone the Repository**
 ```bash
-git clone https://github.com/your-username/PingUp.git
+git clone https://github.com/AdityaChaudhary0002/PingUp.git
 cd PingUp
 ```
 
 ### **2. Install Dependencies**
 
-You need to install dependencies for both the **client** (frontend) and **server** (backend).
-
-**For Client:**
+**Client:**
 ```bash
 cd client
 npm install
 ```
 
-**For Server:**
+**Server:**
 ```bash
 cd server
 npm install
@@ -69,7 +80,7 @@ npm install
 
 ### **3. Environment Variables (.env)**
 
-Create a `.env` file in the **server** directory and add the following credentials:
+Create a `.env` file in the **server** directory:
 ```env
 # Database
 MONGODB_URI=your_mongodb_connection_string
@@ -78,6 +89,10 @@ MONGODB_URI=your_mongodb_connection_string
 CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
 JWT_SECRET=your_jwt_secret
+
+# AI Services
+GEMINI_API_KEY=your_gemini_api_key
+GROQ_API_KEY=your_groq_api_key
 
 # Image Storage (ImageKit)
 IMAGEKIT_PUBLIC_KEY=your_imagekit_public_key
@@ -88,9 +103,9 @@ IMAGEKIT_URL_ENDPOINT=your_imagekit_url
 INNGEST_SIGNING_KEY=your_inngest_signing_key
 INNGEST_EVENT_KEY=your_inngest_event_key
 
-# Email Service (Nodemailer - Gmail)
+# Email (Nodemailer)
 SMTP_USER=your_gmail_address
-SMTP_PASS=your_gmail_app_password  # (No spaces!)
+SMTP_PASS=your_gmail_app_password
 SENDER_EMAIL=your_gmail_address
 
 # Frontend URL
@@ -99,69 +114,48 @@ FRONTEND_URL=http://localhost:5173
 
 Create a `.env` file in the **client** directory:
 ```env
+# Auth
 VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+
+# API
 VITE_API_URL=http://localhost:4000
+
+# Video Calls (ZegoCloud)
+VITE_ZEGO_APP_ID=your_zego_app_id
+VITE_ZEGO_SERVER_SECRET=your_zego_server_secret
 ```
 
 ---
 
 ### **4. Run the Application**
 
-**Start the Backend Server:**
-Open a terminal in the `server` folder:
+**Start Backend:**
 ```bash
+cd server
 npm run server
 ```
-*Server runs on port 4000 by default.*
 
-**Start the Frontend Client:**
-Open a new terminal in the `client` folder:
+**Start Frontend:**
 ```bash
+cd client
 npm run dev
-```
-*Client runs on port 5173 by default.*
-
----
-
-## 📂 Project Structure
-
-```
-PingUp/
-├── client/          # React Frontend
-│   ├── src/
-│   │   ├── components/  # Reusable UI components (PostCard, Navbar, etc.)
-│   │   ├── pages/       # Application Pages (Home, Profile, Connect, etc.)
-│   │   ├── features/    # Redux slices (userSlice, connectionSlice)
-│   │   └── api/         # Axios configuration
-│   └── ...
-│
-├── server/          # Node.js Backend
-│   ├── controllers/ # Logic for Users, Posts, Stories, Messages
-│   ├── models/      # Mongoose Schemas (User, Post, Story, Connection)
-│   ├── routes/      # Express API Routes
-│   ├── configs/     # Configuration (ImageKit, Nodemailer)
-│   ├── inngest/     # Background job functions
-│   └── scripts/     # Utility scripts (e.g., test-email.js)
-│
-└── README.md        # Project Documentation
 ```
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! If you'd like to improve the project:
-1.  Fork the repository.
-2.  Create a new branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
+Contributions are welcome!
+1.  Fork the repo.
+2.  Create a branch (`git checkout -b feature/NewFeature`).
+3.  Commit changes (`git commit -m 'Add NewFeature'`).
+4.  Push to branch (`git push origin feature/NewFeature`).
 5.  Open a Pull Request.
 
 ---
 
 ## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
 ---
 
